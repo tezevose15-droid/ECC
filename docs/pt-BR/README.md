@@ -112,7 +112,7 @@ Comece em menos de 2 minutos:
 
 ```bash
 # Adicionar marketplace
-/plugin marketplace add https://github.com/affaan-m/everything-claude-code
+/plugin marketplace add https://github.com/affaan-m/ECC
 
 # Instalar plugin
 /plugin install everything-claude-code@everything-claude-code
@@ -301,7 +301,7 @@ claude --version
 
 ```bash
 # Adicionar este repositório como marketplace
-/plugin marketplace add https://github.com/affaan-m/everything-claude-code
+/plugin marketplace add https://github.com/affaan-m/ECC
 
 # Instalar o plugin
 /plugin install everything-claude-code@everything-claude-code
