@@ -8,7 +8,10 @@ const path = require('path');
 const {
   createCodexWorktreeAdapter,
   parseCodexTarget,
-  findLatestRollout
+  parseCodexRollout,
+  isCodexRolloutFileTarget,
+  findLatestRollout,
+  findRolloutById
 } = require('../../scripts/lib/session-adapters/codex-worktree');
 const {
   normalizeCodexWorktreeSession,
@@ -129,6 +132,76 @@ test('registry routes structured codex-worktree target and direct rollout path',
 
   const listed = registry.listAdapters().map(a => a.id);
   assert.ok(listed.includes('codex-worktree'), 'registry lists codex-worktree adapter');
+});
+
+
+// --- branch/error coverage ---
+
+function writeRollout(dir, name, lines) {
+  const fp = require('path').join(dir, name);
+  require('fs').writeFileSync(fp, lines.map(l => JSON.stringify(l)).join('\n') + '\n', 'utf8');
+  return fp;
+}
+
+test('parseCodexTarget handles non-string and unprefixed input', () => {
+  assert.strictEqual(parseCodexTarget(null), null);
+  assert.strictEqual(parseCodexTarget(42), null);
+  assert.strictEqual(parseCodexTarget('/abs/path.jsonl'), null);
+});
+
+test('adapter throws clear errors for missing sessions and unknown ids', () => {
+  const sessionsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-codex-empty-'));
+  const adapter = createCodexWorktreeAdapter({ sessionsDir, loadStateStoreImpl: () => null });
+  assert.throws(() => adapter.open('codex:latest', { cwd: os.tmpdir() }).getSnapshot(), /No Codex rollout sessions found/);
+  assert.throws(() => adapter.open('codex:nope-not-real', { cwd: os.tmpdir() }).getSnapshot(), /not found/);
+  assert.throws(() => adapter.open('/not/a/rollout.txt', { cwd: os.tmpdir() }).getSnapshot(), /Unsupported Codex session target/);
+});
+
+test('findRolloutById + direct file target + isCodexRolloutFileTarget', () => {
+  const sessionsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-codex-byid-'));
+  const day = path.join(sessionsDir, '2026', '06', '02');
+  fs.mkdirSync(day, { recursive: true });
+  const now = new Date().toISOString();
+  const fp = writeRollout(day, 'rollout-2026-06-02T03-00-00-019eUNIQUEID0001.jsonl', [
+    { type: 'session_meta', timestamp: now, payload: { id: '019eUNIQUEID0001', cwd: sessionsDir } }
+  ]);
+
+  assert.strictEqual(findRolloutById(sessionsDir, '019eUNIQUEID0001'), fp);
+  assert.ok(isCodexRolloutFileTarget(fp, os.tmpdir()));
+  assert.ok(!isCodexRolloutFileTarget('not-a-file.jsonl', os.tmpdir()));
+
+  const adapter = createCodexWorktreeAdapter({ sessionsDir, loadStateStoreImpl: () => null, resolveBranchImpl: () => null });
+  const byId = adapter.open('codex:019eUNIQUEID0001', { cwd: os.tmpdir() }).getSnapshot();
+  assert.strictEqual(byId.session.id, '019eUNIQUEID0001');
+  const byFile = adapter.open(fp, { cwd: os.tmpdir() }).getSnapshot();
+  assert.strictEqual(byFile.session.id, '019eUNIQUEID0001');
+});
+
+test('parseCodexRollout: model fallbacks, objective truncation, corrupt-line skip, mtime fallback', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-codex-parse-'));
+  const longObjective = 'x'.repeat(400);
+  const fp = path.join(dir, 'rollout-2026-06-02T03-00-00-019eMODELFALL0002.jsonl');
+  // include a corrupt line, no turn_context (force meta.model_provider fallback), no timestamps (force mtime)
+  fs.writeFileSync(fp, [
+    JSON.stringify({ type: 'session_meta', payload: { id: '019eMODELFALL0002', cwd: dir, model_provider: 'openai' } }),
+    '{ this is corrupt json',
+    JSON.stringify({ type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'text', text: longObjective }] } })
+  ].join('\n') + '\n', 'utf8');
+
+  const parsed = parseCodexRollout(fp, { resolveBranchImpl: () => null });
+  assert.strictEqual(parsed.model, 'openai', 'falls back to model_provider when no turn_context/model');
+  assert.ok(parsed.objective.endsWith('...'), 'long objective is truncated');
+  assert.ok(parsed.objective.length <= 280);
+  assert.strictEqual(parsed.active, true, 'no record timestamps => falls back to (recent) file mtime');
+});
+
+test('resolveGitBranch returns null when cwd is not a git repo (real path)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-codex-nogit-'));
+  const fp = path.join(dir, 'rollout-2026-06-02T03-00-00-019eNOGIT00003.jsonl');
+  fs.writeFileSync(fp, JSON.stringify({ type: 'session_meta', payload: { id: '019eNOGIT00003', cwd: dir } }) + '\n', 'utf8');
+  // no resolveBranchImpl => exercises the real execFileSync + catch path
+  const parsed = parseCodexRollout(fp, {});
+  assert.strictEqual(parsed.branch, null);
 });
 
 console.log(`\n=== Results: ${passed} passed, ${failed} failed ===`);

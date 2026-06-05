@@ -8,7 +8,10 @@ const path = require('path');
 const {
   createOpencodeAdapter,
   parseOpencodeTarget,
-  findLatestSessionInfo
+  parseOpencodeSession,
+  isOpencodeSessionFileTarget,
+  findLatestSessionInfo,
+  findSessionInfoById
 } = require('../../scripts/lib/session-adapters/opencode');
 const {
   normalizeOpencodeSession,
@@ -142,6 +145,74 @@ test('registry routes structured opencode target and lists the adapter', () => {
   const listed = registry.listAdapters().map(a => a.id);
   assert.ok(listed.includes('opencode'), 'registry lists opencode adapter');
   assert.ok(listed.includes('codex-worktree'), 'registry still lists codex-worktree adapter');
+});
+
+
+// --- branch/error coverage ---
+
+function writeSession(storageDir, projectHash, sessionId, info, messages) {
+  const sdir = path.join(storageDir, 'session', projectHash);
+  const mdir = path.join(storageDir, 'message', sessionId);
+  fs.mkdirSync(sdir, { recursive: true });
+  fs.mkdirSync(mdir, { recursive: true });
+  fs.writeFileSync(path.join(sdir, sessionId + '.json'), JSON.stringify(info), 'utf8');
+  (messages || []).forEach((m, i) => fs.writeFileSync(path.join(mdir, 'msg_' + i + '.json'), JSON.stringify(m), 'utf8'));
+  return path.join(sdir, sessionId + '.json');
+}
+
+test('parseOpencodeTarget handles non-string and unprefixed input', () => {
+  assert.strictEqual(parseOpencodeTarget(null), null);
+  assert.strictEqual(parseOpencodeTarget('/abs/ses_x.json'), null);
+});
+
+test('adapter throws for empty store and unknown id; findLatest on empty => null', () => {
+  const storageDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-oc-empty-'));
+  assert.strictEqual(findLatestSessionInfo(storageDir), null);
+  const adapter = createOpencodeAdapter({ storageDir, loadStateStoreImpl: () => null });
+  assert.throws(() => adapter.open('opencode:latest', { cwd: os.tmpdir() }).getSnapshot(), /No OpenCode sessions found/);
+  assert.throws(() => adapter.open('opencode:ses_missing', { cwd: os.tmpdir() }).getSnapshot(), /not found/);
+});
+
+test('findSessionInfoById + direct file target + isOpencodeSessionFileTarget', () => {
+  const storageDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-oc-byid-'));
+  const now = Date.now();
+  const fp = writeSession(storageDir, 'projhash', 'ses_UNIQUE001', {
+    id: 'ses_UNIQUE001', directory: storageDir, title: 'real title', time: { created: now - 5000, updated: now - 5000 }
+  }, []);
+
+  assert.strictEqual(findSessionInfoById(storageDir, 'ses_UNIQUE001'), fp);
+  assert.ok(isOpencodeSessionFileTarget(fp, os.tmpdir()));
+  assert.ok(!isOpencodeSessionFileTarget('/tmp/not-session.json', os.tmpdir()));
+
+  const adapter = createOpencodeAdapter({ storageDir, loadStateStoreImpl: () => null, resolveBranchImpl: () => null });
+  const byId = adapter.open('opencode:ses_UNIQUE001', { cwd: os.tmpdir() }).getSnapshot();
+  assert.strictEqual(byId.session.id, 'ses_UNIQUE001');
+  const byFile = adapter.open(fp, { cwd: os.tmpdir() }).getSnapshot();
+  assert.strictEqual(byFile.session.id, 'ses_UNIQUE001');
+});
+
+test('parseOpencodeSession: model from later assistant message, missing-time => recorded', () => {
+  const storageDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-oc-parse-'));
+  const fp = writeSession(storageDir, 'ph', 'ses_MODEL01', {
+    id: 'ses_MODEL01', directory: storageDir, title: 'do work'
+    // no time block => updatedMs null => recorded/inactive
+  }, [
+    { id: 'm0', role: 'user' },
+    { id: 'm1', role: 'assistant', modelID: 'claude-sonnet-4-5-20250929', providerID: 'anthropic' }
+  ]);
+  const parsed = parseOpencodeSession(fp, { storageDir, resolveBranchImpl: () => null });
+  assert.strictEqual(parsed.model, 'claude-sonnet-4-5-20250929');
+  assert.strictEqual(parsed.provider, 'anthropic');
+  assert.strictEqual(parsed.active, false);
+});
+
+test('resolveGitBranch real path returns null outside a repo', () => {
+  const storageDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecc-oc-nogit-'));
+  const fp = writeSession(storageDir, 'ph', 'ses_NOGIT01', {
+    id: 'ses_NOGIT01', directory: storageDir, title: 't', time: { created: 1, updated: 1 }
+  }, []);
+  const parsed = parseOpencodeSession(fp, { storageDir }); // no resolveBranchImpl => real git path
+  assert.strictEqual(parsed.branch, null);
 });
 
 console.log(`\n=== Results: ${passed} passed, ${failed} failed ===`);
