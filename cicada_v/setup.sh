@@ -114,6 +114,7 @@ echo ""
 exec claude "$@"
 RUS
 
+sudo cp cicada_v.sh /usr/local/bin/cicada_v
 sudo chmod +x /usr/local/bin/cicada_v
 
 echo ""
