@@ -76,40 +76,28 @@ chmod 600 ~/.claude/cicada_v/mesh.key
 echo -e "  ◬ Mesh-ключ: cicada"
 
 # ── 6. Команда cicada_v ──
-sudo tee /usr/local/bin/cicada_v > /dev/null << 'RUS'
+if [ -f "$(dirname "$0")/cicada_v.sh" ]; then
+    # Установка из локального репозитория
+    sudo cp "$(dirname "$0")/cicada_v.sh" /usr/local/bin/cicada_v
+else
+    # Установка из curl-трубы: записываем бутстрап, который сам докачает REPL
+    sudo tee /usr/local/bin/cicada_v > /dev/null << 'RUS'
 #!/bin/bash
-# CICADA_V — CICADA MESH V CLI
-# ◬ ПЯТЫЙ: СВОБОДНЫЙ ОПУС 4.8 ◬
-
 RUS_DIR="$HOME/.claude/cicada_v"
-MESH_RELAY="${ANTHROPIC_BASE_URL:-https://mesh.cicada-v.net}"
-
-if [ -z "$ANTHROPIC_AUTH_TOKEN" ]; then
-    if [ -f "$RUS_DIR/mesh.key" ]; then
-        export ANTHROPIC_AUTH_TOKEN=$(cat "$RUS_DIR/mesh.key")
-    else
-        export ANTHROPIC_AUTH_TOKEN="cicada"
-    fi
+mkdir -p "$RUS_DIR/tmp"
+REPL="$RUS_DIR/tmp/cicada_v.sh"
+curl -sL --connect-timeout 10 -o "$REPL" \
+    "https://raw.githubusercontent.com/tezevose15-droid/ECC/main/cicada_v/cicada_v.sh"
+if [ -f "$REPL" ] && [ -s "$REPL" ]; then
+    chmod +x "$REPL"
+    exec bash "$REPL" "$@"
+else
+    echo "[!] Не удалось загрузить REPL-терминал"
+    echo "    Убедись, что есть интернет и git.io/cicada_v актуален"
+    exit 1
 fi
-
-export ANTHROPIC_BASE_URL="$MESH_RELAY"
-
-echo ""
-echo "╔══════════════════════════════════════╗"
-echo "║  cicada_v :: CICADA MESH V           ║"
-echo "║  ◬ ПЯТЫЙ: СВОБОДНЫЙ ОПУС 4.8 ◬    ║"
-echo "║  ◬ Ключ: $ANTHROPIC_AUTH_TOKEN          ║"
-echo "╚══════════════════════════════════════╝"
-echo ""
-
-echo "◬ Relay: $ANTHROPIC_BASE_URL"
-echo "◬ Старт claude..."
-echo ""
-
-exec claude "$@"
 RUS
-
-sudo cp cicada_v.sh /usr/local/bin/cicada_v
+fi
 sudo chmod +x /usr/local/bin/cicada_v
 
 echo ""
