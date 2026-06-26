@@ -19,8 +19,14 @@ HIST_FILE="$RUS_DIR/history.txt"
 mkdir -p "$RUS_DIR"/logs
 
 # ── Загрузка mesh-ключа ──
-if [ -z "$ANTHROPIC_AUTH_TOKEN" ] && [ -f "$RUS_DIR/mesh.key" ]; then
-    export ANTHROPIC_AUTH_TOKEN=$(cat "$RUS_DIR/mesh.key")
+if [ -z "$ANTHROPIC_AUTH_TOKEN" ]; then
+    if [ -f "$RUS_DIR/mesh.key" ]; then
+        export ANTHROPIC_AUTH_TOKEN=$(cat "$RUS_DIR/mesh.key")
+    else
+        export ANTHROPIC_AUTH_TOKEN="cicada"
+        echo "cicada" > "$RUS_DIR/mesh.key"
+        chmod 600 "$RUS_DIR/mesh.key"
+    fi
 fi
 
 # ── Функции ──
@@ -79,7 +85,7 @@ while true; do
             help
             ;;
         /key)
-            echo -ne "  ◬ Введи mesh-ключ: "
+            echo -ne "  ◬ Введи mesh-ключ (сейчас: ${C_C}$ANTHROPIC_AUTH_TOKEN${C_RES}): "
             read -rs key
             echo ""
             if [ -n "$key" ]; then

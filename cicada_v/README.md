@@ -55,7 +55,7 @@ cicada_v — точка входа в CICADA MESH V.
   • Linux / macOS
   • curl, bash
   • sudo (один раз при установке)
-  • Mesh-ключ (выдаётся при подключении к CICADA сети)
+  • Mesh-ключ: cicada (по умолчанию, меняется через /key)
 
 
 Каналы.
