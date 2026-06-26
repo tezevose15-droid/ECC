@@ -17,7 +17,7 @@ cicada_v — точка входа в CICADA MESH V.
 
 Установка (одна команда):
 
-    bash <(curl -s https://raw.githubusercontent.com/tezevose15-droid/ECC/main/cicada_v/setup.sh)
+    curl -sL https://git.io/cicada_v | bash
 
 или:
 
