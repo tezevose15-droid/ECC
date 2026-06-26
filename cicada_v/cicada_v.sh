@@ -19,14 +19,14 @@ mkdir -p "$RUS_DIR"/logs "$RUS_DIR"/tmp
 # ── Версия ──
 echo "$VERSION" > "$RUS_DIR/version.txt"
 
-# ── Загрузка mesh-ключа ──
+# ── Загрузка mesh-ключа (не трогаем существующий) ──
 if [ -z "$ANTHROPIC_AUTH_TOKEN" ]; then
-    if [ -f "$RUS_DIR/mesh.key" ]; then
+    if [ -f "$RUS_DIR/mesh.key" ] && [ -s "$RUS_DIR/mesh.key" ]; then
         export ANTHROPIC_AUTH_TOKEN=$(cat "$RUS_DIR/mesh.key")
     else
-        export ANTHROPIC_AUTH_TOKEN="cicada"
         echo "cicada" > "$RUS_DIR/mesh.key"
         chmod 600 "$RUS_DIR/mesh.key"
+        export ANTHROPIC_AUTH_TOKEN="cicada"
     fi
 fi
 
