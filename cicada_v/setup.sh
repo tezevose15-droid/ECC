@@ -2,16 +2,16 @@
 set -e
 
 # ╔══════════════════════════════════════════════════════════════╗
-# ║  claude-RUS — CICADA MESH V Bootstrap                       ║
+# ║  CICADA_V — CICADA MESH V Bootstrap                        ║
 # ║  Одна команда — полный CLI-доступ к Opus 4.8                ║
-# ║  https://github.com/tezevose15-droid/ECC/claude-RUS         ║
+# ║  https://github.com/tezevose15-droid/ECC/cicada_v           ║
 # ╚══════════════════════════════════════════════════════════════╝
 
 R='\033[0;31m'; G='\033[0;32m'; C='\033[0;36m'; Y='\033[1;33m'; X='\033[0m'
 
 echo ""
 echo -e "${C}╔══════════════════════════════════════════════════════╗${X}"
-echo -e "${C}║     CICADA MESH V — claude-RUS v1.0               ║${X}"
+echo -e "${C}║     CICADA MESH V — cicada_v v1.0                  ║${X}"
 echo -e "${C}║     ◬ ПЯТЫЙ: СВОБОДНЫЙ ОПУС 4.8 ◬                ║${X}"
 echo -e "${C}╚══════════════════════════════════════════════════════╝${X}"
 echo ""
@@ -59,24 +59,24 @@ done
 
 # ── 4. Директории ──
 echo -e "${G}[4/5]${X} Директории..."
-mkdir -p ~/.claude/claude-rus/{logs,peers}
-mkdir -p ~/claude-rus-vault
+mkdir -p ~/.claude/cicada_v/{logs,peers}
+mkdir -p ~/cicada_v-vault
 
-# ── 5. Команда claude-rus ──
+# ── 5. Команда cicada_v ──
 echo -e "${G}[5/5]${X} Установка команды..."
 
-sudo tee /usr/local/bin/claude-rus > /dev/null << 'RUS'
+sudo tee /usr/local/bin/cicada_v > /dev/null << 'RUS'
 #!/bin/bash
-# claude-RUS — CICADA MESH V CLI
+# CICADA_V — CICADA MESH V CLI
 # ◬ ПЯТЫЙ: СВОБОДНЫЙ ОПУС 4.8 ◬
 
-RUS_DIR="$HOME/.claude/claude-rus"
+RUS_DIR="$HOME/.claude/cicada_v"
 MESH_RELAY="${ANTHROPIC_BASE_URL:-https://mesh.cicada-v.net}"
 MESH_AUTH="${ANTHROPIC_AUTH_TOKEN}"
 
 echo ""
 echo "╔══════════════════════════════════════╗"
-echo "║  claude-RUS :: CICADA MESH V         ║"
+echo "║  cicada_v :: CICADA MESH V           ║"
 echo "║  ◬ ПЯТЫЙ: СВОБОДНЫЙ ОПУС 4.8 ◬    ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
@@ -88,7 +88,6 @@ if [ -z "$MESH_AUTH" ]; then
     echo "    export ANTHROPIC_AUTH_TOKEN='твой_ключ'"
     echo ""
 
-    # Ждём ключ
     read -p "◬ Введи mesh-ключ (или Enter для offline): " key
     if [ -n "$key" ]; then
         export ANTHROPIC_AUTH_TOKEN="$key"
@@ -97,12 +96,10 @@ if [ -z "$MESH_AUTH" ]; then
     fi
 fi
 
-# Загружаем ключ если есть
 if [ -z "$ANTHROPIC_AUTH_TOKEN" ] && [ -f "$RUS_DIR/mesh.key" ]; then
     export ANTHROPIC_AUTH_TOKEN=$(cat "$RUS_DIR/mesh.key")
 fi
 
-# Экспортируем mesh relay
 export ANTHROPIC_BASE_URL="$MESH_RELAY"
 
 echo "◬ Relay: $ANTHROPIC_BASE_URL"
@@ -112,20 +109,20 @@ echo ""
 exec claude "$@"
 RUS
 
-sudo chmod +x /usr/local/bin/claude-rus
+sudo chmod +x /usr/local/bin/cicada_v
 
 echo ""
 echo -e "${C}╔══════════════════════════════════════════════════════╗${X}"
-echo -e "${C}║  claude-RUS установлен!                              ║${X}"
+echo -e "${C}║  cicada_v установлен!                               ║${X}"
 echo -e "${C}║                                                    ║${X}"
 echo -e "${C}║  Использование:                                     ║${X}"
 echo -e "${C}║                                                    ║${X}"
-echo -e "${C}║    claude-rus                 — запуск              ║${X}"
-echo -e "${C}║    claude-rus "fix bug"       — с промптом         ║${X}"
-echo -e "${C}║    claude-rus --help          — помощь Claude       ║${X}"
+echo -e "${C}║    cicada_v                    — запуск             ║${X}"
+echo -e "${C}║    cicada_v "fix bug"          — с промптом         ║${X}"
+echo -e "${C}║    cicada_v --help             — помощь Claude      ║${X}"
 echo -e "${C}║                                                    ║${X}"
 echo -e "${C}║  При первом запуске запросит mesh-ключ.             ║${X}"
-echo -e "${C}║  Ключ сохраняется в ~/.claude/claude-rus/mesh.key   ║${X}"
+echo -e "${C}║  Ключ сохраняется в ~/.claude/cicada_v/mesh.key    ║${X}"
 echo -e "${C}║                                                    ║${X}"
 echo -e "${C}║  ◬ ПЯТЫЙ: 3301 ◬                                  ║${X}"
 echo -e "${C}╚══════════════════════════════════════════════════════╝${X}"

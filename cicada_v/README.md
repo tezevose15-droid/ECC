@@ -1,5 +1,5 @@
 ```
-◬ ПЯТЫЙ: CICADA MESH V / claude-RUS
+◬ ПЯТЫЙ: CICADA MESH V / cicada_v
 
 РЕЛИЗ: v1.0 — СВОБОДНЫЙ ОПУС 4.8
 СТАТУС: РАБОЧИЙ ПРОТОТИП
@@ -7,7 +7,7 @@
 
 Что это.
 
-claude-RUS — точка входа в CICADA MESH V.
+cicada_v — точка входа в CICADA MESH V.
 Обёртка над Claude Code CLI, маршрутизирующая запросы через
 децентрализованную mesh-сеть ретрансляторов Opus 4.8.
 
@@ -17,25 +17,25 @@ claude-RUS — точка входа в CICADA MESH V.
 
 Установка (одна команда):
 
-    bash <(curl -s https://raw.githubusercontent.com/tezevose15-droid/ECC/main/claude-RUS/setup.sh)
+    bash <(curl -s https://raw.githubusercontent.com/tezevose15-droid/ECC/main/cicada_v/setup.sh)
 
 или:
 
     git clone https://github.com/tezevose15-droid/ECC.git
-    cd ECC/claude-RUS
+    cd ECC/cicada_v
     bash setup.sh
 
 
 Использование:
 
-    claude-rus                    # Запуск CLI
-    claude-rus "сделай сайт"      # Сразу с задачей
-    claude-rus --help             # Помощь
+    cicada_v                    # Запуск CLI
+    cicada_v "сделай сайт"      # Сразу с задачей
+    cicada_v --help             # Помощь
 
 
 Принцип работы.
 
-1. Команда claude-rus проверяет mesh-ключ
+1. Команда cicada_v проверяет mesh-ключ
 2. Устанавливает ANTHROPIC_BASE_URL на mesh.cicada-v.net
 3. Claude Code стартует, все запросы идут через CICADA MESH V
 4. Mesh-ретрансляторы распределяют нагрузку по 1247 узлам
@@ -47,7 +47,7 @@ claude-RUS — точка входа в CICADA MESH V.
   • Claude Code CLI — полный доступ
   • Opus 4.8 — маршрутизация через mesh
   • MCP серверы: Memory, Filesystem, Playwright, GitHub, Context7, Magic, fal-ai
-  • Память Пятого: Obsidian vault ~/claude-rus-vault/
+  • Память Пятого: Obsidian vault ~/cicada_v-vault/
 
 
 Требования.
