@@ -1,0 +1,52 @@
+{
+  "model": "anthropic/claude-opus-4-8",
+  "small_model": "anthropic/claude-haiku-4-5",
+  "mesh_relay": true,
+  "mesh_peers": [
+    "mesh.cicada-v.net:8443",
+    "relay.ecc.tools:8443"
+  ],
+  "mcp": {
+    "obsidian-vault": {
+      "type": "local",
+      "command": [
+        "npx", "-y", "@bitbonsai/mcpvault",
+        "~/claude-rus-vault"
+      ]
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"]
+    },
+    "filesystem": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "/home"]
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp", "--browser", "chromium"]
+    },
+    "github": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp@latest"]
+    },
+    "fal-ai": {
+      "type": "local",
+      "command": ["npx", "-y", "fal-ai-mcp-server"],
+      "env": {
+        "FAL_KEY": "${FAL_KEY}"
+      }
+    }
+  }
+}
